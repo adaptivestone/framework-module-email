@@ -24,7 +24,8 @@
     "build": "node preBuild.ts && tsc && node postBuild.ts",
     "types:check": "tsc --noEmit",
     "codestyle": "prettier --check ./",
-    "codestyle:fix": "prettier --write ./"
+    "codestyle:fix": "prettier --write ./",
+    "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm"
   },
   "files": [
     "dist"
@@ -32,6 +33,7 @@
   "author": "Andrei Lahunou",
   "license": "MIT",
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.17.3",
     "@types/html-to-text": "^9.0.4",
     "@types/node": "^22.13.4",
     "@types/nodemailer": "^6.4.17",

@@ -20,3 +20,4 @@ jobs:
         run: npm ci
       - run: node --run types:check
       - run: node --run codestyle
+      - run: node --run check-exports

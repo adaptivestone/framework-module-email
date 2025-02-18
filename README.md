@@ -4,11 +4,14 @@
 
 > Adaptive stone framework module email
 
+ESM only module. 
+
 ## Install
 
 ```bash
 npm install @adaptivestone/framework-module-email
 ```
+
 
 ## Usage
 
