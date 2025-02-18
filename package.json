@@ -16,8 +16,7 @@
     "build": "node preBuild.ts && tsc && node postBuild.ts"
   },
   "files": [
-    "dist",
-    "src/**/*.d.ts"
+    "dist"
   ],
   "author": "Andrey Logunov",
   "license": "MIT",
