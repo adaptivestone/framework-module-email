@@ -1,6 +1,6 @@
 {
   "name": "@adaptivestone/framework-module-email",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Adaptive stone node js framework module email",
   "main": "./dist/index.js",
   "type": "module",
@@ -12,6 +12,14 @@
     "url": "https://gitlab.com/adaptivestone/framework"
   },
   "homepage": "https://framework.adaptivestone.com/",
+  "keywords": [
+    "node",
+    "email",
+    "framework",
+    "adaptivestone",
+    "framework-module-email",
+    "nodemailer"
+  ],
   "scripts": {
     "build": "node preBuild.ts && tsc && node postBuild.ts",
     "types:check": "tsc --noEmit"
@@ -19,7 +27,7 @@
   "files": [
     "dist"
   ],
-  "author": "Andrey Logunov",
+  "author": "Andrei Lahunou",
   "license": "MIT",
   "devDependencies": {
     "@types/html-to-text": "^9.0.4",
