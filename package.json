@@ -22,7 +22,9 @@
   ],
   "scripts": {
     "build": "node preBuild.ts && tsc && node postBuild.ts",
-    "types:check": "tsc --noEmit"
+    "types:check": "tsc --noEmit",
+    "codestyle": "prettier --check ./",
+    "codestyle:fix": "prettier --write ./"
   },
   "files": [
     "dist"
@@ -35,6 +37,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/nodemailer-stub-transport": "^1.1.8",
     "@types/pug": "^2.0.10",
+    "prettier": "^3.5.1",
     "typescript": "^5.8.1-rc"
   },
   "dependencies": {

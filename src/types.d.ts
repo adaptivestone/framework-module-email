@@ -1,5 +1,5 @@
-import type { Options as SMTPTransportOptions } from "nodemailer/lib/smtp-transport/index.d.ts";
-import type stubTransport from "nodemailer-stub-transport";
+import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
+import type stubTransport from 'nodemailer-stub-transport';
 
 export type TMinimalI18n = {
   t: (key: string, options?: any) => string;
@@ -12,7 +12,7 @@ export interface EmailConfig {
     stub: Parameters<typeof stubTransport>[0];
     smtp: SMTPTransportOptions;
   };
-  transport: "stub" | "smtp";
+  transport: 'stub' | 'smtp';
   webResources: {
     relativeTo: string;
     images: boolean;
@@ -27,5 +27,5 @@ export type TMinimalApp = {
   logger: {
     error: (message: string) => void;
   };
-  getConfig(configName: "mail"): EmailConfig;
+  getConfig(configName: 'mail'): EmailConfig;
 };

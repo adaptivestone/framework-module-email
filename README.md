@@ -2,7 +2,6 @@
 
 [![npm package](https://img.shields.io/npm/v/@adaptivestone/framework-module-email)](https://www.npmjs.com/package/@adaptivestone/framework-module-email)
 
-
 > Adaptive stone framework module email
 
 ## Install
@@ -14,7 +13,7 @@ npm install @adaptivestone/framework-module-email
 ## Usage
 
 ```ts
-import Mail from "@adaptivestone/framework-module-email";
+import Mail from '@adaptivestone/framework-module-email';
 ```
 
 ## API

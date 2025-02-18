@@ -1,14 +1,14 @@
-import fs from "node:fs";
-import path from "node:path";
-import * as url from "node:url";
-import { promisify } from "node:util";
-import nodemailer from "nodemailer";
-import stub from "nodemailer-stub-transport";
-import pug from "pug";
-import juice from "juice";
-import { convert } from "html-to-text";
-import type { Options as SMTPTransportOptions } from "nodemailer/lib/smtp-transport/index.d.ts";
-import type { TMinimalI18n, TMinimalApp } from "./types.d.ts";
+import fs from 'node:fs';
+import path from 'node:path';
+import * as url from 'node:url';
+import { promisify } from 'node:util';
+import nodemailer from 'nodemailer';
+import stub from 'nodemailer-stub-transport';
+import pug from 'pug';
+import juice from 'juice';
+import { convert } from 'html-to-text';
+import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
+import type { TMinimalI18n, TMinimalApp } from './types.d.ts';
 
 const mailTransports = {
   stub,
@@ -23,7 +23,7 @@ class Mail {
   /**
    * Template full path
    */
-  template = "";
+  template = '';
 
   /**
    * Data to render in template. Object with value that available inside template
@@ -35,14 +35,14 @@ class Mail {
    * Locale to render template
    * @type {string}
    */
-  locale = "en";
+  locale = 'en';
 
   /**
    * i18n object. Fallback if you have no real i18n object
    */
   i18n: TMinimalI18n = {
     t: (str: string) => str,
-    language: "en", // todo change it to config
+    language: 'en', // todo change it to config
   };
 
   /**
@@ -56,32 +56,32 @@ class Mail {
     app: TMinimalApp,
     template: string,
     templateData = {},
-    i18n: TMinimalI18n | null = null
+    i18n: TMinimalI18n | null = null,
   ) {
     this.app = app;
-    const dirname = url.fileURLToPath(new URL(".", import.meta.url));
+    const dirname = url.fileURLToPath(new URL('.', import.meta.url));
     if (!path.isAbsolute(template)) {
       if (
         fs.existsSync(
-          `${this.app.foldersConfig.emails}/${path.basename(template)}`
+          `${this.app.foldersConfig.emails}/${path.basename(template)}`,
         )
       ) {
         this.template = `${this.app.foldersConfig.emails}/${path.basename(
-          template
+          template,
         )}`;
       } else if (
         fs.existsSync(
-          path.join(dirname, `/templates/${path.basename(template)}`)
+          path.join(dirname, `/templates/${path.basename(template)}`),
         )
       ) {
         this.template = path.join(
           dirname,
-          `/templates/${path.basename(template)}`
+          `/templates/${path.basename(template)}`,
         );
       } else {
         this.template = path.join(dirname, `/templates/emptyTemplate`);
         this.app.logger.error(
-          `Template '${template}' not found. Using 'emptyTemplate' as a fallback`
+          `Template '${template}' not found. Using 'emptyTemplate' as a fallback`,
         );
       }
     }
@@ -100,18 +100,18 @@ class Mail {
    */
   async #renderTemplateFile(
     { type, fullPath }: { type?: string; fullPath?: string } = {},
-    templateData = {}
+    templateData = {},
   ) {
     if (!type || !fullPath) {
       return null;
     }
 
     switch (type) {
-      case "html":
-      case "text":
-      case "css":
-        return fs.promises.readFile(fullPath, { encoding: "utf8" });
-      case "pug": {
+      case 'html':
+      case 'text':
+      case 'css':
+        return fs.promises.readFile(fullPath, { encoding: 'utf8' });
+      case 'pug': {
         const compiledFunction = pug.compileFile(fullPath);
         return compiledFunction(templateData);
       }
@@ -132,7 +132,7 @@ class Mail {
       };
     } = {};
     for (const file of files) {
-      const [name, extension] = file.split(".");
+      const [name, extension] = file.split('.');
       templates[name] = {
         type: extension,
         fullPath: path.join(this.template, file),
@@ -141,10 +141,10 @@ class Mail {
 
     if (!templates.html || !templates.subject) {
       throw new Error(
-        "Template HTML and Subject must be provided. Please follow documentation for details https://framework.adaptivestone.com/docs/email"
+        'Template HTML and Subject must be provided. Please follow documentation for details https://framework.adaptivestone.com/docs/email',
       );
     }
-    const mailConfig = this.app.getConfig("mail");
+    const mailConfig = this.app.getConfig('mail');
 
     const templateDataToRender = {
       locale: this.locale,
@@ -162,7 +162,7 @@ class Mail {
       ]);
 
     // @ts-ignore
-    juice.tableElements = ["TABLE"];
+    juice.tableElements = ['TABLE'];
 
     const juiceResourcesAsync = promisify(juice.juiceResources);
 
@@ -195,7 +195,7 @@ class Mail {
       inlinedHTML,
       text,
       from,
-      aditionalNodemailerOptions
+      aditionalNodemailerOptions,
     );
   }
 
@@ -216,19 +216,19 @@ class Mail {
     html: string,
     text: string = null,
     from: string = null,
-    additionalNodeMailerOption = {}
+    additionalNodeMailerOption = {},
   ) {
     if (!app || !to || !subject || !html) {
-      throw new Error("App, to, subject and html is required fields.");
+      throw new Error('App, to, subject and html is required fields.');
     }
-    const mailConfig = app.getConfig("mail");
+    const mailConfig = app.getConfig('mail');
     if (!from) {
       from = mailConfig.from;
     }
 
     if (!text) {
       text = convert(html, {
-        selectors: [{ selector: "img", format: "skip" }],
+        selectors: [{ selector: 'img', format: 'skip' }],
       });
     }
     const transportConfig = mailConfig.transports[mailConfig.transport];
