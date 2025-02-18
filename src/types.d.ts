@@ -7,17 +7,17 @@ export type TMinimalI18n = {
 };
 
 export interface EmailConfig {
-  from: string;
-  transports: {
-    stub: Parameters<typeof stubTransport>[0];
-    smtp: SMTPTransportOptions;
+  from?: string;
+  transports?: {
+    stub?: Parameters<typeof stubTransport>[0];
+    smtp?: SMTPTransportOptions;
   };
-  transport: 'stub' | 'smtp';
-  webResources: {
-    relativeTo: string;
-    images: boolean;
+  transport?: 'stub' | 'smtp';
+  webResources?: {
+    relativeTo?: string;
+    images?: boolean;
   };
-  globalVariablesToTemplates: Record<string, unknown>;
+  globalVariablesToTemplates?: Record<string, unknown>;
 }
 
 export type TMinimalApp = {

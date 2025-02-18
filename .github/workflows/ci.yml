@@ -24,3 +24,4 @@ jobs:
       - run: node --run types:check
       - run: node --run codestyle
       - run: node --run check-exports
+      - run: node --test --experimental-test-coverage

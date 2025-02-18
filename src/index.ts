@@ -49,7 +49,7 @@ class Mail {
 
   /**
    * Construct mail class
-   * @param {import('../../../server.js').default['app']} app
+   * @param {TMinimalI18n} app
    * @param {string} template template name
    * @param {object} [templateData={}] data to render in template. Object with value that available inside template
    * @param {object} [i18n] data to render in template
@@ -146,7 +146,7 @@ class Mail {
         'Template HTML and Subject must be provided. Please follow documentation for details https://framework.adaptivestone.com/docs/email',
       );
     }
-    const mailConfig = Mail.#getConfig(this.app);
+    const mailConfig = Mail.getConfig(this.app);
 
     const templateDataToRender = {
       locale: this.locale,
@@ -203,7 +203,7 @@ class Mail {
 
   /**
    * Send provided text (html) to email. Low level function. All data should be prepared before sending (like inline styles)
-   * @param {import('../../../server.js').default['app']} app application
+   * @param {TMinimalI18n} app application
    * @param {string} to send to
    * @param {string} subject email topic
    * @param {string} html hmlt body of emain
@@ -223,7 +223,7 @@ class Mail {
     if (!app || !to || !subject || !html) {
       throw new Error('App, to, subject and html is required fields.');
     }
-    const mailConfig = Mail.#getConfig(app);
+    const mailConfig = Mail.getConfig(app);
     if (!from) {
       from = mailConfig.from;
     }
@@ -249,8 +249,9 @@ class Mail {
 
   /**
    * Get final config. Method to get final config.
+   * @param {TMinimalI18n} app application
    */
-  static #getConfig(app: TMinimalApp) {
+  static getConfig(app: TMinimalApp): typeof defaultMailConfig {
     const mailConfig = app.getConfig('mail');
     return merge(defaultMailConfig, mailConfig || {});
   }
