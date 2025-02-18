@@ -13,7 +13,8 @@
   },
   "homepage": "https://framework.adaptivestone.com/",
   "scripts": {
-    "build": "node preBuild.ts && tsc && node postBuild.ts"
+    "build": "node preBuild.ts && tsc && node postBuild.ts",
+    "types:check": "tsc --noEmit"
   },
   "files": [
     "dist"
