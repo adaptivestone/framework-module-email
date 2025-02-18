@@ -74,6 +74,13 @@ class Mail {
           template,
         )}`;
       } else if (
+        this.app.frameworkFolder &&
+        fs.existsSync(
+          `${this.app.frameworkFolder}/services/messaging/email/templates/${path.basename(template)}`,
+        )
+      ) {
+        this.template = `${this.app.frameworkFolder}/services/messaging/email/templates/${path.basename(template)}`;
+      } else if (
         // now try to find in templates folder locally
         fs.existsSync(
           path.join(dirname, `/templates/${path.basename(template)}`),

@@ -4,11 +4,12 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import Mail from '../src/index.ts';
+import type { TMinimalApp } from './types.d.ts';
 
 describe('Mail module', () => {
-  let mockApp;
-  let tempDir;
-  let templateDir;
+  let mockApp: TMinimalApp;
+  let tempDir: string;
+  let templateDir: string;
 
   // Set up files once for all tests
   before(async () => {
@@ -48,6 +49,7 @@ describe('Mail module', () => {
           transport: 'stub',
         };
       },
+      frameworkFolder: '',
     };
   });
 
@@ -256,6 +258,71 @@ describe('Mail module', () => {
       );
       const message = result.response.toString();
       assert.ok(message.includes('html\n\n\nHELLO'));
+    });
+  });
+
+  describe('Template inheritance (app, framework, module)', () => {
+    let tempDirInh: string;
+    let templateDirInhA: string;
+    let templateDirInhF: string;
+    let mockAppInh: TMinimalApp;
+    before(async () => {
+      tempDirInh = await mkdtemp(path.join(os.tmpdir(), 'mail-test-inh'));
+      templateDirInhA = path.join(tempDir, 'a/emptyTemplate');
+      templateDirInhF = path.join(
+        tempDir,
+        'f/services/messaging/email/templates/emptyTemplate',
+      );
+
+      // Create test template directory
+      await mkdir(templateDirInhA, { recursive: true });
+      await mkdir(templateDirInhF, { recursive: true });
+      // Create test template files
+      await Promise.all([
+        writeFile(path.join(templateDirInhA, 'html.html'), 'app template'),
+        writeFile(path.join(templateDirInhA, 'subject.html'), 'app subject'),
+        writeFile(
+          path.join(templateDirInhF, 'html.html'),
+          'framework template',
+        ),
+        writeFile(
+          path.join(templateDirInhF, 'subject.html'),
+          'framework subject',
+        ),
+      ]);
+      mockAppInh = {
+        ...mockApp,
+        ...{
+          foldersConfig: { emails: path.join(tempDir, 'a') },
+          frameworkFolder: path.join(tempDir, 'f'),
+        },
+      };
+    });
+
+    after(async () => {
+      if (tempDirInh) {
+        await rm(tempDirInh, { recursive: true, force: true });
+      }
+    });
+
+    it('should render template from app in a first priority', async () => {
+      const mail = new Mail(mockAppInh, 'emptyTemplate');
+      const rendered = await mail.renderTemplate();
+      assert.equal(rendered.htmlRaw, 'app template');
+    });
+
+    it('should render template from framework in a second priority', async () => {
+      await rm(path.join(tempDir, 'a'), { recursive: true, force: true });
+      const mail = new Mail(mockAppInh, 'emptyTemplate');
+      const rendered = await mail.renderTemplate();
+      assert.equal(rendered.htmlRaw, 'framework template');
+    });
+
+    it('should render template from module in a third priority', async () => {
+      await rm(path.join(tempDir, 'f'), { recursive: true, force: true });
+      const mail = new Mail(mockAppInh, 'emptyTemplate');
+      const rendered = await mail.renderTemplate();
+      assert(rendered.htmlRaw.includes('message template not found'));
     });
   });
 

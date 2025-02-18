@@ -28,4 +28,5 @@ export type TMinimalApp = {
     error: (message: string) => void;
   };
   getConfig(configName: 'mail'): EmailConfig;
+  frameworkFolder: string;
 };
