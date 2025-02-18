@@ -10,5 +10,4 @@ const promises = paths.map((path) => {
 });
 const result = await Promise.all(promises);
 
-console.log(result);
 console.timeEnd('postBuild. Done');

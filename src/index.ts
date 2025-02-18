@@ -7,6 +7,8 @@ import stub from 'nodemailer-stub-transport';
 import pug from 'pug';
 import juice from 'juice';
 import { convert } from 'html-to-text';
+import merge from 'deepmerge';
+import defaultMailConfig from './config/mail.ts';
 import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
 import type { TMinimalI18n, TMinimalApp } from './types.d.ts';
 
@@ -144,7 +146,7 @@ class Mail {
         'Template HTML and Subject must be provided. Please follow documentation for details https://framework.adaptivestone.com/docs/email',
       );
     }
-    const mailConfig = this.app.getConfig('mail');
+    const mailConfig = Mail.#getConfig(this.app);
 
     const templateDataToRender = {
       locale: this.locale,
@@ -221,7 +223,7 @@ class Mail {
     if (!app || !to || !subject || !html) {
       throw new Error('App, to, subject and html is required fields.');
     }
-    const mailConfig = app.getConfig('mail');
+    const mailConfig = Mail.#getConfig(app);
     if (!from) {
       from = mailConfig.from;
     }
@@ -243,6 +245,14 @@ class Mail {
       html,
       ...additionalNodeMailerOption,
     });
+  }
+
+  /**
+   * Get final config. Method to get final config.
+   */
+  static #getConfig(app: TMinimalApp) {
+    const mailConfig = app.getConfig('mail');
+    return merge(defaultMailConfig, mailConfig || {});
   }
 }
 
