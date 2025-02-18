@@ -6,6 +6,8 @@
 
 ESM only module.
 
+Email subsystem based on [nodemailer](https://github.com/nodemailer/nodemailer). In additional we are using [juice](https://www.npmjs.com/package/juice) to inline css and [html-to-text](https://www.npmjs.com/package/html-to-text) to generate text from html of files
+
 ## Install
 
 ```bash
