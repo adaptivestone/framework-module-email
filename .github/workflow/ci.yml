@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Tests
+
+on:
+  pull_request:
+    branches: ['*']
+
+jobs:
+  check-types:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - name: npm clean install
+        run: npm ci
+      - run: node --run types:check
