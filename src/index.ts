@@ -174,9 +174,9 @@ class Mail {
       extraCss,
     });
     return {
-      htmlRaw: htmlRendered,
-      subject: subjectRendered,
-      text: textRendered,
+      htmlRaw: htmlRendered ?? '',
+      subject: subjectRendered ?? '',
+      text: textRendered ?? '',
       inlinedHTML,
     };
   }
@@ -187,7 +187,7 @@ class Mail {
    * @param {object} [aditionalNodemailerOptions = {}] additional option to nodemailer
    * @return {Promise}
    */
-  async send(to: string, from: string = null, aditionalNodemailerOptions = {}) {
+  async send(to: string, from: string = '', aditionalNodemailerOptions = {}) {
     const { subject, text, inlinedHTML } = await this.renderTemplate();
 
     return Mail.sendRaw(
@@ -216,8 +216,8 @@ class Mail {
     to: string,
     subject: string,
     html: string,
-    text: string = null,
-    from: string = null,
+    text: string = '',
+    from: string = '',
     additionalNodeMailerOption = {},
   ) {
     if (!app || !to || !subject || !html) {
