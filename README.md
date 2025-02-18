@@ -1,6 +1,7 @@
 # adaptivestone-framework-module-email
 
-[![npm package][https://img.shields.io/npm/v/@adaptivestone/framework-module-email]][https://www.npmjs.com/package/@adaptivestone/framework-module-email]
+[![npm package](https://img.shields.io/npm/v/@adaptivestone/framework-module-email)](https://www.npmjs.com/package/@adaptivestone/framework-module-email)
+
 
 > Adaptive stone framework module email
 
