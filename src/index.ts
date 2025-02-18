@@ -62,7 +62,9 @@ class Mail {
   ) {
     this.app = app;
     const dirname = url.fileURLToPath(new URL('.', import.meta.url));
-    if (!path.isAbsolute(template)) {
+    this.template = template;
+    if (!path.isAbsolute(this.template)) {
+      // first go to emails folder
       if (
         fs.existsSync(
           `${this.app.foldersConfig.emails}/${path.basename(template)}`,
@@ -72,6 +74,7 @@ class Mail {
           template,
         )}`;
       } else if (
+        // now try to find in templates folder locally
         fs.existsSync(
           path.join(dirname, `/templates/${path.basename(template)}`),
         )
@@ -81,6 +84,7 @@ class Mail {
           `/templates/${path.basename(template)}`,
         );
       } else {
+        // looks like we have no template. Using empty template
         this.template = path.join(dirname, `/templates/emptyTemplate`);
         this.app.logger.error(
           `Template '${template}' not found. Using 'emptyTemplate' as a fallback`,
@@ -101,24 +105,24 @@ class Mail {
    * @returns string
    */
   async #renderTemplateFile(
-    { type, fullPath }: { type?: string; fullPath?: string } = {},
+    template: { type: string; fullPath: string },
     templateData = {},
   ) {
-    if (!type || !fullPath) {
+    if (!template || !template.type || !template.fullPath) {
       return null;
     }
 
-    switch (type) {
+    switch (template.type) {
       case 'html':
       case 'text':
       case 'css':
-        return fs.promises.readFile(fullPath, { encoding: 'utf8' });
+        return fs.promises.readFile(template.fullPath, { encoding: 'utf8' });
       case 'pug': {
-        const compiledFunction = pug.compileFile(fullPath);
+        const compiledFunction = pug.compileFile(template.fullPath);
         return compiledFunction(templateData);
       }
       default:
-        throw new Error(`Template type ${type} is not supported`);
+        throw new Error(`Template type ${template.type} is not supported`);
     }
   }
   /**
@@ -163,6 +167,10 @@ class Mail {
         this.#renderTemplateFile(templates.style),
       ]);
 
+    if (!htmlRendered) {
+      throw new Error('HTML template cant be rendered');
+    }
+
     // @ts-ignore
     juice.tableElements = ['TABLE'];
 
@@ -171,7 +179,7 @@ class Mail {
     const inlinedHTML = await juiceResourcesAsync(htmlRendered, {
       preserveImportant: true,
       webResources: mailConfig.webResources,
-      extraCss,
+      extraCss: extraCss ?? '',
     });
     return {
       htmlRaw: htmlRendered ?? '',

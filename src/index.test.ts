@@ -112,6 +112,17 @@ describe('Mail module', () => {
       assert.ok(mail.template.includes('test-template'));
     });
 
+    it('should find and use template from absolute path', async () => {
+      const mail = new Mail(
+        mockApp,
+        templateDir,
+        { name: 'John' },
+        { t: (str) => str, language: 'en' },
+      );
+
+      assert.ok(mail.template.includes('test-template'));
+    });
+
     it('should render template with provided data', async () => {
       const mail = new Mail(
         mockApp,
@@ -142,6 +153,109 @@ describe('Mail module', () => {
 
       const rendered = await mail.renderTemplate();
       assert.ok(rendered.inlinedHTML.includes('color: blue'));
+    });
+
+    it('should return error if html on subjet not provided', async () => {
+      const templateDirNoSubject = path.join(
+        tempDir,
+        'test-template-no-subject',
+      );
+      await mkdir(templateDirNoSubject, { recursive: true });
+      await Promise.all([
+        writeFile(
+          path.join(templateDirNoSubject, 'html.pug'),
+          'h1 Hello #{name}\ndiv.content #{t("welcome")}',
+        ),
+      ]);
+      const mail = new Mail(
+        mockApp,
+        'test-template-no-subject',
+        { name: 'John' },
+        { t: (str) => str, language: 'en' },
+      );
+      await assert.rejects(
+        async () => {
+          await mail.renderTemplate();
+        },
+        (err: Error) => {
+          assert(
+            err.message.includes('Template HTML and Subject must be provided'),
+          );
+          return true;
+        },
+      );
+      await rm(templateDirNoSubject, { recursive: true, force: true });
+    });
+
+    it('should return error if html have no extension', async () => {
+      const templateDirEmptyHTML = path.join(tempDir, 'test-template-wrong');
+      await mkdir(templateDirEmptyHTML, { recursive: true });
+      await Promise.all([
+        writeFile(path.join(templateDirEmptyHTML, 'html'), 'this is empty'),
+        writeFile(path.join(templateDirEmptyHTML, 'subject'), 'this is empty'),
+      ]);
+      const mail = new Mail(
+        mockApp,
+        'test-template-wrong',
+        { name: 'John' },
+        { t: (str) => str, language: 'en' },
+      );
+      await assert.rejects(
+        async () => {
+          await mail.renderTemplate();
+        },
+        (err: Error) => {
+          assert(err.message.includes('HTML template cant be rendered'));
+          return true;
+        },
+      );
+      await rm(templateDirEmptyHTML, { recursive: true, force: true });
+    });
+
+    it('should return null if html on unknown type', async () => {
+      const templateDirEmptyHTML = path.join(tempDir, 'test-template-wrong');
+      await mkdir(templateDirEmptyHTML, { recursive: true });
+      await Promise.all([
+        writeFile(
+          path.join(templateDirEmptyHTML, 'html.fakeExtension'),
+          'this is empty',
+        ),
+        writeFile(
+          path.join(templateDirEmptyHTML, 'subject.fakeExtension'),
+          'this is empty',
+        ),
+      ]);
+      const mail = new Mail(
+        mockApp,
+        'test-template-wrong',
+        { name: 'John' },
+        { t: (str) => str, language: 'en' },
+      );
+      await assert.rejects(
+        async () => {
+          await mail.renderTemplate();
+        },
+        (err: Error) => {
+          assert(
+            err.message.includes(
+              'Template type fakeExtension is not supported',
+            ),
+          );
+          return true;
+        },
+      );
+      await rm(templateDirEmptyHTML, { recursive: true, force: true });
+    });
+
+    it('should generate text from html', async () => {
+      const result = await Mail.sendRaw(
+        mockApp,
+        'to',
+        'subject',
+        'html <h1>Hello</h1>',
+      );
+      const message = result.response.toString();
+      assert.ok(message.includes('html\n\n\nHELLO'));
     });
   });
 
