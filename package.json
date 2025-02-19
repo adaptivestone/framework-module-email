@@ -1,6 +1,6 @@
 {
   "name": "@adaptivestone/framework-module-email",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Adaptive stone node js framework module email",
   "main": "./dist/index.js",
   "type": "module",
