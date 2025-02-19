@@ -9,9 +9,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/adaptivestone/framework"
+    "url": "https://github.com/adaptivestone/framework-module-email"
   },
-  "homepage": "https://framework.adaptivestone.com/",
+  "homepage": "https://framework.adaptivestone.com/docs/email",
   "keywords": [
     "node",
     "email",
