@@ -197,12 +197,16 @@ class Mail {
   }
   /**
    * Send email
-   * @param {string} to email send to
+   * @param {string | Array<string>} to email send to
    * @param {string} [from = mailConfig.from]
    * @param {object} [aditionalNodemailerOptions = {}] additional option to nodemailer
    * @return {Promise}
    */
-  async send(to: string, from: string = '', aditionalNodemailerOptions = {}) {
+  async send(
+    to: string | Array<string>,
+    from: string = '',
+    aditionalNodemailerOptions = {},
+  ) {
     const { subject, text, inlinedHTML } = await this.renderTemplate();
 
     return Mail.sendRaw(
@@ -219,7 +223,7 @@ class Mail {
   /**
    * Send provided text (html) to email. Low level function. All data should be prepared before sending (like inline styles)
    * @param {TMinimalI18n} app application
-   * @param {string} to send to
+   * @param {string | Array<string>} to send to
    * @param {string} subject email topic
    * @param {string} html hmlt body of emain
    * @param {string} [text] if not provided will be generated from html string
@@ -228,7 +232,7 @@ class Mail {
    */
   static async sendRaw(
     app: TMinimalApp,
-    to: string,
+    to: string | Array<string>,
     subject: string,
     html: string,
     text: string = '',

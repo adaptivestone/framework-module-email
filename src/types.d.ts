@@ -22,7 +22,7 @@ export interface EmailConfig {
 
 export type TMinimalApp = {
   foldersConfig: {
-    emails: string;
+    emails?: string;
   };
   logger: {
     error: (message: string) => void;
