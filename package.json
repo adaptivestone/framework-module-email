@@ -36,8 +36,8 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
     "@types/html-to-text": "^9.0.4",
-    "@types/node": "^24.0.3",
-    "@types/nodemailer": "^6.4.17",
+    "@types/node": "^25.0.0",
+    "@types/nodemailer": "^7.0.0",
     "@types/nodemailer-stub-transport": "^1.1.8",
     "@types/pug": "^2.0.10",
     "prettier": "^3.5.1",
