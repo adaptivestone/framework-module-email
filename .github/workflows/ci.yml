@@ -23,5 +23,6 @@ jobs:
         run: npm ci
       - run: node --run types:check
       - run: node --run check
+      - run: node --run build
       - run: node --run check-exports
       - run: node --test --experimental-test-coverage
