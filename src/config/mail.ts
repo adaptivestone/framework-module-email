@@ -1,6 +1,5 @@
-import type { EmailConfig } from '../types.d.ts';
-
 import path from 'node:path';
+import type { EmailConfig } from '../types.d.ts';
 
 const config: EmailConfig = {
   from: 'Localhost <info@localhost>',

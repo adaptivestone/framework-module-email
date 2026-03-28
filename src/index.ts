@@ -2,15 +2,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as url from 'node:url';
 import { promisify } from 'node:util';
+import merge from 'deepmerge';
+import { convert } from 'html-to-text';
+import juice from 'juice';
 import nodemailer from 'nodemailer';
+import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
 import stub from 'nodemailer-stub-transport';
 import pug from 'pug';
-import juice from 'juice';
-import { convert } from 'html-to-text';
-import merge from 'deepmerge';
 import defaultMailConfig from './config/mail.ts';
-import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
-import type { TMinimalI18n, TMinimalApp } from './types.d.ts';
+import type { TMinimalApp, TMinimalI18n } from './types.d.ts';
 
 const mailTransports = {
   stub,
@@ -115,7 +115,7 @@ class Mail {
     template: { type: string; fullPath: string },
     templateData = {},
   ) {
-    if (!template || !template.type || !template.fullPath) {
+    if (!template?.type || !template.fullPath) {
       return null;
     }
 
@@ -178,7 +178,7 @@ class Mail {
       throw new Error('HTML template cant be rendered');
     }
 
-    // @ts-ignore
+    // @ts-expect-error
     juice.tableElements = ['TABLE'];
 
     const juiceResourcesAsync = promisify(juice.juiceResources);

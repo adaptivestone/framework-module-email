@@ -5,9 +5,9 @@ console.time('postBuild. Done');
 
 const paths = ['resources', 'templates', 'types.d.ts'];
 
-const promises = paths.map((path) => {
-  fs.cp(`./src/${path}`, `./dist/${path}`, { recursive: true });
-});
-const result = await Promise.all(promises);
+const promises = paths.map((path) =>
+  fs.cp(`./src/${path}`, `./dist/${path}`, { recursive: true }),
+);
+await Promise.all(promises);
 
 console.timeEnd('postBuild. Done');

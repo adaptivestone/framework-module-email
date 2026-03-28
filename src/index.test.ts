@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { describe, it, before, after } from 'node:test';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
-import path from 'node:path';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
+import path from 'node:path';
+import { after, before, describe, it } from 'node:test';
 import Mail from '../src/index.ts';
 import type { TMinimalApp } from './types.d.ts';
 
@@ -43,7 +43,7 @@ describe('Mail module', () => {
           console.log(msg);
         },
       },
-      getConfig(configName: 'mail') {
+      getConfig(_configName: 'mail') {
         return {
           from: 'test@test.com',
           transport: 'stub',

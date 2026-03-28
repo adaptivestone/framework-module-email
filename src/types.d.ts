@@ -2,7 +2,7 @@ import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transp
 import type stubTransport from 'nodemailer-stub-transport';
 
 export type TMinimalI18n = {
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
   language: string;
 };
 
