@@ -21,7 +21,7 @@ class Mail {
   /**
    * Adaptive stone framework application
    */
-  app: TMinimalApp = null;
+  app!: TMinimalApp;
   /**
    * Template full path
    */
@@ -244,7 +244,7 @@ class Mail {
     }
     const mailConfig = Mail.getConfig(app);
     if (!from) {
-      from = mailConfig.from;
+      from = mailConfig.from ?? '';
     }
 
     if (!text) {
@@ -252,9 +252,16 @@ class Mail {
         selectors: [{ selector: 'img', format: 'skip' }],
       });
     }
-    const transportConfig = mailConfig.transports[mailConfig.transport];
-    const transport = mailTransports[mailConfig.transport];
-    const transporter = nodemailer.createTransport(transport(transportConfig));
+    const transport = mailConfig.transport ?? 'smtp';
+    const transports = mailConfig.transports ?? {};
+    const transportConfig = transports[transport];
+    if (!transportConfig) {
+      throw new Error(`Transport config for '${transport}' is not defined`);
+    }
+    const transportFn = mailTransports[transport];
+    const transporter = nodemailer.createTransport(
+      transportFn(transportConfig),
+    );
 
     return transporter.sendMail({
       from,

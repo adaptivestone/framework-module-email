@@ -9,7 +9,7 @@ const config: EmailConfig = {
     smtp: {
       // https://github.com/nodemailer/nodemailer#set-up-smtp
       host: process.env.EMAIL_HOST || 'smtp.mailtrap.io',
-      port: parseInt(process.env.EMAIL_PORT) || 2525,
+      port: parseInt(process.env.EMAIL_PORT ?? '', 10) || 2525,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
