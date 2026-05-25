@@ -189,7 +189,7 @@ class Mail {
       extraCss: extraCss ?? '',
     });
     return {
-      htmlRaw: htmlRendered ?? '',
+      htmlRaw: htmlRendered,
       subject: subjectRendered ?? '',
       text: textRendered ?? '',
       inlinedHTML,
