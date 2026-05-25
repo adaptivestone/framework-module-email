@@ -1,6 +1,6 @@
 {
   "name": "@adaptivestone/framework-module-email",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Adaptive stone node js framework module email",
   "main": "./dist/index.js",
   "type": "module",
@@ -38,14 +38,14 @@
     "@biomejs/biome": "^2.4.9",
     "@types/html-to-text": "^9.0.4",
     "@types/node": "^25.0.0",
-    "@types/nodemailer": "^7.0.0",
+    "@types/nodemailer": "^8.0.0",
     "@types/nodemailer-stub-transport": "^1.1.8",
     "@types/pug": "^2.0.10",
     "typescript": "^6.0.0"
   },
   "dependencies": {
     "deepmerge": "^4.3.1",
-    "html-to-text": "^9.0.5",
+    "html-to-text": "^10.0.0",
     "juice": "^11.0.0",
     "nodemailer": "^8.0.4",
     "nodemailer-stub-transport": "^1.1.0",
