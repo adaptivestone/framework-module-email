@@ -17,6 +17,13 @@ const mailTransports = {
   smtp: (data: SMTPTransportOptions) => data,
 };
 
+// Restrict juice's style->attribute mapping to <table> only (not td/th/tr/...).
+// Set once at module load; it mutates a shared juice singleton.
+// @ts-expect-error juice's types do not expose tableElements
+juice.tableElements = ['TABLE'];
+
+const juiceResourcesAsync = promisify(juice.juiceResources);
+
 class Mail {
   /**
    * Adaptive stone framework application
@@ -101,7 +108,7 @@ class Mail {
     this.templateData = templateData;
     if (i18n) {
       this.i18n = i18n;
-      this.locale = this.i18n?.language;
+      this.locale = this.i18n?.language ?? this.locale;
     }
   }
 
@@ -145,9 +152,9 @@ class Mail {
       };
     } = {};
     for (const file of files) {
-      const [name, extension] = file.split('.');
+      const { name, ext } = path.parse(file);
       templates[name] = {
-        type: extension,
+        type: ext.slice(1),
         fullPath: path.join(this.template, file),
       };
     }
@@ -177,11 +184,6 @@ class Mail {
     if (!htmlRendered) {
       throw new Error('HTML template cant be rendered');
     }
-
-    // @ts-expect-error
-    juice.tableElements = ['TABLE'];
-
-    const juiceResourcesAsync = promisify(juice.juiceResources);
 
     const inlinedHTML = await juiceResourcesAsync(htmlRendered, {
       preserveImportant: true,

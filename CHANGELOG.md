@@ -1,3 +1,11 @@
+# 1.1.2
+
+- Update juice from v11 to v12
+- Require Node.js >=22.12.0 (juice v12 minimum)
+- Disable remote `<link>`/`<script>` fetching during CSS inlining (SSRF hardening)
+- Resolve template file extensions via `path.parse` to support multi-dot filenames
+- Update dependencies
+
 # 1.1.1
 Update dependencies
 

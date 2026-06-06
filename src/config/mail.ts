@@ -21,6 +21,10 @@ const config: EmailConfig = {
     // https://github.com/jrit/web-resource-inliner path to find resources
     relativeTo: path.resolve('src/services/messaging/email/resources'),
     images: false,
+    // Do not fetch remote <link>/<script> resources during inlining (SSRF hardening).
+    // Emails ship CSS via the style.css template + extraCss instead of remote URLs.
+    links: false,
+    scripts: false,
   },
   globalVariablesToTemplates: {},
 };

@@ -16,6 +16,8 @@ export interface EmailConfig {
   webResources?: {
     relativeTo?: string;
     images?: boolean;
+    links?: boolean;
+    scripts?: boolean;
   };
   globalVariablesToTemplates?: Record<string, unknown>;
 }
