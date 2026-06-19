@@ -1,10 +1,20 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import Mail from '../src/index.ts';
-import type { TMinimalApp } from './types.d.ts';
+import type { TMinimalApp, TTemplateEngine } from './types.d.ts';
+
+// Minimal stand-in for pug so the suite can exercise `.pug` templates without
+// depending on the real pug package (no longer a dependency of this module as
+// of v2). Renders pug-style escaped interpolation: `#{ variable }`.
+const fakePugEngine: TTemplateEngine = async (fullPath, data) => {
+  const source = await readFile(fullPath, 'utf8');
+  return source.replace(/#\{\s*(\w+)\s*\}/g, (_, key) =>
+    String(data[key] ?? ''),
+  );
+};
 
 describe('Mail module', () => {
   let mockApp: TMinimalApp;
@@ -13,6 +23,10 @@ describe('Mail module', () => {
 
   // Set up files once for all tests
   before(async () => {
+    // Pug is no longer bundled (v2). Apps opt in by registering an engine for
+    // the `.pug` extension; the suite uses a tiny fake instead of the real pug.
+    Mail.registerTemplateEngine('pug', fakePugEngine);
+
     // Create temporary directory
     tempDir = await mkdtemp(path.join(os.tmpdir(), 'mail-test-'));
     templateDir = path.join(tempDir, 'test-template');
@@ -24,13 +38,13 @@ describe('Mail module', () => {
     await Promise.all([
       writeFile(
         path.join(templateDir, 'html.pug'),
-        'h1 Hello #{name}\ndiv.content #{t("welcome")}',
+        '<h1>Hello #{name}</h1>\n<div class="content">Welcome</div>',
       ),
-      writeFile(path.join(templateDir, 'subject.pug'), '| Welcome #{name}'),
+      writeFile(path.join(templateDir, 'subject.pug'), 'Welcome #{name}'),
       writeFile(path.join(templateDir, 'style.css'), 'h1 { color: blue; }'),
       writeFile(
         path.join(templateDir, 'text.pug'),
-        '| Hello #{name}, Welcome to our service!',
+        'Hello #{name}, Welcome to our service!',
       ),
     ]);
 
@@ -323,6 +337,58 @@ describe('Mail module', () => {
       const mail = new Mail(mockAppInh, 'emptyTemplate');
       const rendered = await mail.renderTemplate();
       assert(rendered.htmlRaw.includes('message template not found'));
+    });
+  });
+
+  describe('Template engines', () => {
+    it('ships plain-text engines and the opted-in pug engine', () => {
+      assert.equal(Mail.hasTemplateEngine('html'), true);
+      assert.equal(Mail.hasTemplateEngine('text'), true);
+      assert.equal(Mail.hasTemplateEngine('css'), true);
+      // registered by this suite's setup, not by the module itself
+      assert.equal(Mail.hasTemplateEngine('pug'), true);
+    });
+
+    it('registers, uses and unregisters a custom engine', async () => {
+      Mail.registerTemplateEngine('mustache', async (fullPath, data) => {
+        const raw = await readFile(fullPath, 'utf8');
+        return raw.replace(/\{\{(\w+)\}\}/g, (_, key) =>
+          String(data[key] ?? ''),
+        );
+      });
+      assert.equal(Mail.hasTemplateEngine('mustache'), true);
+
+      const dir = path.join(tempDir, 'custom-engine');
+      await mkdir(dir, { recursive: true });
+      await Promise.all([
+        writeFile(path.join(dir, 'html.mustache'), '<h1>Hi {{name}}</h1>'),
+        writeFile(path.join(dir, 'subject.html'), 'Hello'),
+      ]);
+
+      const mail = new Mail(mockApp, 'custom-engine', { name: 'Jane' });
+      const rendered = await mail.renderTemplate();
+      assert.ok(rendered.inlinedHTML.includes('Hi Jane'));
+      assert.equal(rendered.subject, 'Hello');
+
+      assert.equal(Mail.unregisterTemplateEngine('mustache'), true);
+      assert.equal(Mail.hasTemplateEngine('mustache'), false);
+
+      await rm(dir, { recursive: true, force: true });
+    });
+
+    it('normalizes the extension (leading dot and case)', () => {
+      Mail.registerTemplateEngine('.FOO', () => '');
+      assert.equal(Mail.hasTemplateEngine('foo'), true);
+      assert.equal(Mail.hasTemplateEngine('.Foo'), true);
+      assert.equal(Mail.unregisterTemplateEngine('foo'), true);
+    });
+
+    it('throws when registering without an engine function', () => {
+      assert.throws(
+        // @ts-expect-error testing invalid usage
+        () => Mail.registerTemplateEngine('bad'),
+        /requires a non-empty extension and an engine function/,
+      );
     });
   });
 

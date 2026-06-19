@@ -6,6 +6,16 @@ export type TMinimalI18n = {
   language: string;
 };
 
+/**
+ * Template engine. Receives the absolute path to a template file and the data
+ * to render, and returns the rendered string (sync or async).
+ * Register custom engines via `Mail.registerTemplateEngine(extension, engine)`.
+ */
+export type TTemplateEngine = (
+  fullPath: string,
+  templateData: Record<string, unknown>,
+) => string | Promise<string>;
+
 export interface EmailConfig {
   from?: string;
   transports?: {

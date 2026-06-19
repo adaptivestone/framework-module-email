@@ -1,3 +1,30 @@
+# 2.0.0
+
+**Breaking changes**
+
+- Pug is no longer a dependency of this module and is not bundled. Out of the box only the plain `html`, `text` and `css` template engines are available.
+- To keep rendering `.pug` templates, install pug in your app and register it once at startup:
+  ```ts
+  import pug from 'pug';
+  import Mail from '@adaptivestone/framework-module-email';
+
+  Mail.registerTemplateEngine('pug', (fullPath, data) =>
+    pug.compileFile(fullPath)(data),
+  );
+  ```
+- The built-in `emptyTemplate` fallback is now plain HTML/text instead of Pug.
+
+**Features**
+
+- New `Mail.registerTemplateEngine(extension, engine)` to register custom template engines for any file extension (pug, ejs, handlebars, mustache, ...). Engines receive the absolute template path and the render data, and return a string (sync or async).
+- New `Mail.unregisterTemplateEngine(extension)` and `Mail.hasTemplateEngine(extension)` helpers.
+- Exported the `TTemplateEngine` type.
+
+# 1.1.3
+
+- Update nodemailer from v8 to v9
+- Update dependencies
+
 # 1.1.2
 
 - Update juice from v11 to v12

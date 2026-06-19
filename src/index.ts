@@ -8,14 +8,34 @@ import juice from 'juice';
 import nodemailer from 'nodemailer';
 import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
 import stub from 'nodemailer-stub-transport';
-import pug from 'pug';
 import defaultMailConfig from './config/mail.ts';
-import type { TMinimalApp, TMinimalI18n } from './types.d.ts';
+import type { TMinimalApp, TMinimalI18n, TTemplateEngine } from './types.d.ts';
 
 const mailTransports = {
   stub,
   smtp: (data: SMTPTransportOptions) => data,
 };
+
+/**
+ * Engine that simply reads the file as-is (html, plain text, css).
+ */
+const passthroughEngine: TTemplateEngine = (fullPath) =>
+  fs.promises.readFile(fullPath, { encoding: 'utf8' });
+
+/**
+ * Registry mapping a file extension (without the dot, lower-cased) to the engine
+ * that renders it. By design this module ships ONLY plain-text engines and has
+ * no template-engine dependency of its own. Register engines such as
+ * pug / ejs / handlebars yourself via `Mail.registerTemplateEngine`.
+ */
+const templateEngines = new Map<string, TTemplateEngine>([
+  ['html', passthroughEngine],
+  ['text', passthroughEngine],
+  ['css', passthroughEngine],
+]);
+
+const normalizeExtension = (extension: string) =>
+  extension.toLowerCase().replace(/^\./, '');
 
 // Restrict juice's style->attribute mapping to <table> only (not td/th/tr/...).
 // Set once at module load; it mutates a shared juice singleton.
@@ -126,18 +146,11 @@ class Mail {
       return null;
     }
 
-    switch (template.type) {
-      case 'html':
-      case 'text':
-      case 'css':
-        return fs.promises.readFile(template.fullPath, { encoding: 'utf8' });
-      case 'pug': {
-        const compiledFunction = pug.compileFile(template.fullPath);
-        return compiledFunction(templateData);
-      }
-      default:
-        throw new Error(`Template type ${template.type} is not supported`);
+    const engine = templateEngines.get(normalizeExtension(template.type));
+    if (!engine) {
+      throw new Error(`Template type ${template.type} is not supported`);
     }
+    return engine(template.fullPath, templateData);
   }
   /**
    * Render template
@@ -282,6 +295,47 @@ class Mail {
   static getConfig(app: TMinimalApp): typeof defaultMailConfig {
     const mailConfig = app.getConfig('mail');
     return merge(defaultMailConfig, mailConfig || {});
+  }
+
+  /**
+   * Register (or override) a template engine for a given file extension.
+   * The engine receives the absolute path to the template file and the data to
+   * render, and returns the rendered string (sync or async).
+   *
+   * @example
+   * import ejs from 'ejs';
+   * Mail.registerTemplateEngine('ejs', (fullPath, data) =>
+   *   ejs.renderFile(fullPath, data),
+   * );
+   *
+   * @param {string} extension file extension, with or without a leading dot (case-insensitive)
+   * @param {TTemplateEngine} engine function that renders a template file
+   */
+  static registerTemplateEngine(extension: string, engine: TTemplateEngine) {
+    if (!extension || typeof engine !== 'function') {
+      throw new Error(
+        'registerTemplateEngine requires a non-empty extension and an engine function',
+      );
+    }
+    templateEngines.set(normalizeExtension(extension), engine);
+  }
+
+  /**
+   * Remove a previously registered template engine.
+   * @param {string} extension file extension, with or without a leading dot (case-insensitive)
+   * @returns {boolean} true if an engine was registered and is now removed
+   */
+  static unregisterTemplateEngine(extension: string): boolean {
+    return templateEngines.delete(normalizeExtension(extension));
+  }
+
+  /**
+   * Check whether an engine is registered for the given file extension.
+   * @param {string} extension file extension, with or without a leading dot (case-insensitive)
+   * @returns {boolean}
+   */
+  static hasTemplateEngine(extension: string): boolean {
+    return templateEngines.has(normalizeExtension(extension));
   }
 }
 
