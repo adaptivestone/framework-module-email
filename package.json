@@ -38,7 +38,7 @@
     "@types/node": "^26.0.0",
     "@types/nodemailer": "^8.0.0",
     "@types/nodemailer-stub-transport": "^1.1.8",
-    "typescript": "^6.0.0"
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "deepmerge": "^4.3.1",
