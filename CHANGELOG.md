@@ -1,3 +1,21 @@
+# 2.1.0
+
+**Features**
+
+- Built-in template engines for module templates: `js`, `ts`, `mjs` and `cjs`. The file is imported and its default export is called with the render data, honouring `string | Promise<string>` returns:
+  ```ts
+  // emails/welcome/html.ts
+  export default (data) => `<h1>Hello ${data.name}</h1>`;
+  ```
+  A missing or non-function default export fails with a clear error naming the file.
+- The built-ins are plain entries in the engine registry, so `Mail.registerTemplateEngine('js', ...)` overrides one and `Mail.unregisterTemplateEngine('js')` removes it, exactly as for a custom engine.
+- Exported the `TTemplateModule` type describing the module template contract.
+
+**Fixes**
+
+- The fallback i18n used when no i18n object is passed to `new Mail(...)` now honours both i18next default overloads — `t('key', 'Default')` and `t('key', { defaultValue: 'Default' })` return the default instead of the raw key. A key with no default still renders as the key.
+- `TMinimalI18n` now documents the `t` options object (`TMinimalI18nOptions` with `defaultValue`), so templates can type-check `t(key, { defaultValue: '...' })`.
+
 # 2.0.0
 
 **Breaking changes**

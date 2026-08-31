@@ -114,6 +114,20 @@ describe('Mail module', () => {
       assert.equal(mail.locale, 'en');
       assert.equal(mail.i18n.t('test'), 'test');
     });
+
+    it('fallback t honours both i18next default overloads', () => {
+      const { t } = new Mail(mockApp, 'test-template').i18n;
+      // t(key, 'default')
+      assert.equal(t('email.hi', 'Hello there'), 'Hello there');
+      // t(key, { defaultValue })
+      assert.equal(
+        t('email.hi', { defaultValue: 'Hello there' }),
+        'Hello there',
+      );
+      // interpolation options without a default still fall back to the key
+      assert.equal(t('email.hi', { name: 'John' }), 'email.hi');
+      assert.equal(t('email.hi'), 'email.hi');
+    });
   });
 
   describe('Template handling', () => {
@@ -451,6 +465,214 @@ describe('Mail module', () => {
       );
       assert.ok(
         message.includes(Buffer.from('Hello World').toString('base64')),
+      );
+    });
+  });
+
+  // Kept last on purpose: the two final tests override and then remove the
+  // built-in `js` engine, and the engine registry is process-wide, so nothing
+  // that relies on the built-ins may run after them.
+  describe('Built-in module template engines', () => {
+    let moduleTempDir: string;
+    let moduleApp: TMinimalApp;
+
+    /**
+     * Write a template folder for the module engines.
+     *
+     * Module system matters here: a bare `.js` file inside an OS temp folder
+     * has no `package.json` above it, so Node loads it as CommonJS and
+     * `export default` would be a syntax error. Every fixture folder therefore
+     * gets its own `package.json` pinning the module system ('module' by
+     * default); `.mjs`/`.cjs` fixtures are explicit regardless of it.
+     * The extra `package.json` is inert for the renderer, which only looks at
+     * the `html`, `subject`, `text` and `style` basenames.
+     */
+    const writeTemplateDir = async (
+      name: string,
+      files: Record<string, string>,
+      packageType: 'module' | 'commonjs' = 'module',
+    ) => {
+      const dir = path.join(moduleTempDir, name);
+      await mkdir(dir, { recursive: true });
+      await Promise.all([
+        writeFile(
+          path.join(dir, 'package.json'),
+          JSON.stringify({ type: packageType }),
+        ),
+        ...Object.entries(files).map(([file, content]) =>
+          writeFile(path.join(dir, file), content),
+        ),
+      ]);
+      return dir;
+    };
+
+    before(async () => {
+      moduleTempDir = await mkdtemp(
+        path.join(os.tmpdir(), 'mail-test-module-'),
+      );
+      moduleApp = {
+        ...mockApp,
+        foldersConfig: { emails: moduleTempDir },
+      };
+    });
+
+    after(async () => {
+      if (moduleTempDir) {
+        await rm(moduleTempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('ships built-in engines for js, ts, mjs and cjs', () => {
+      assert.equal(Mail.hasTemplateEngine('js'), true);
+      assert.equal(Mail.hasTemplateEngine('ts'), true);
+      assert.equal(Mail.hasTemplateEngine('mjs'), true);
+      assert.equal(Mail.hasTemplateEngine('cjs'), true);
+    });
+
+    it('renders an ESM js template module', async () => {
+      await writeTemplateDir('esm-js', {
+        'html.js': `export default (data) => \`<h1>Hello \${data.name}</h1>\`;\n`,
+        'subject.js': `export default () => 'Welcome aboard';\n`,
+        'text.js': `export default (data) => \`Hello \${data.name}\`;\n`,
+      });
+
+      const mail = new Mail(moduleApp, 'esm-js', { name: 'John' });
+      const rendered = await mail.renderTemplate();
+
+      assert.ok(rendered.inlinedHTML.includes('Hello John'));
+      assert.equal(rendered.subject, 'Welcome aboard');
+      assert.equal(rendered.text, 'Hello John');
+    });
+
+    it('renders a CommonJS template module through the same engine', async () => {
+      await writeTemplateDir('cjs-template', {
+        'html.cjs': `module.exports = (data) => \`<h1>Hi \${data.name}</h1>\`;\n`,
+        'subject.cjs': `module.exports = () => 'From CJS';\n`,
+      });
+
+      const mail = new Mail(moduleApp, 'cjs-template', { name: 'Jane' });
+      const rendered = await mail.renderTemplate();
+
+      assert.ok(rendered.inlinedHTML.includes('Hi Jane'));
+      assert.equal(rendered.subject, 'From CJS');
+    });
+
+    it('awaits an async default export (mjs)', async () => {
+      await writeTemplateDir('async-mjs', {
+        'html.mjs':
+          `export default async (data) => {\n` +
+          `  await new Promise((resolve) => setTimeout(resolve, 1));\n` +
+          `  return \`<h1>Async \${data.name}</h1>\`;\n` +
+          `};\n`,
+        'subject.mjs': `export default async () => Promise.resolve('Async subject');\n`,
+      });
+
+      const mail = new Mail(moduleApp, 'async-mjs', { name: 'Ann' });
+      const rendered = await mail.renderTemplate();
+
+      assert.ok(rendered.inlinedHTML.includes('Async Ann'));
+      assert.equal(rendered.subject, 'Async subject');
+    });
+
+    it('renders a ts template module and receives the full render data', async () => {
+      await writeTemplateDir('ts-template', {
+        'html.ts':
+          `const template = (data: Record<string, unknown>) =>\n` +
+          `  \`<p>\${data.name}|\${data.locale}|\${typeof data.t}</p>\`;\n` +
+          `export default template;\n`,
+        'subject.ts':
+          `const subject = (data: Record<string, unknown>) =>\n` +
+          `  \`Subject for \${data.name}\`;\n` +
+          `export default subject;\n`,
+      });
+
+      const mail = new Mail(
+        moduleApp,
+        'ts-template',
+        { name: 'Ted' },
+        { t: (str) => str, language: 'fr' },
+      );
+      const rendered = await mail.renderTemplate();
+
+      assert.ok(rendered.inlinedHTML.includes('Ted|fr|function'));
+      assert.equal(rendered.subject, 'Subject for Ted');
+    });
+
+    it('uses the fallback t (defaultValue aware) when no i18n was provided', async () => {
+      await writeTemplateDir('fallback-t', {
+        'html.js':
+          `export default (data) =>\n` +
+          `  \`<h1>\${data.t('email.greeting', { defaultValue: 'Hello there' })}</h1>\` +\n` +
+          `  \`<p>\${data.t('email.bye', 'See you soon')}</p>\` +\n` +
+          `  \`<span>\${data.t('email.untranslated')}</span>\`;\n`,
+        'subject.js':
+          `export default (data) =>\n` +
+          `  data.t('email.subject', { defaultValue: 'Default subject' });\n`,
+      });
+
+      const mail = new Mail(moduleApp, 'fallback-t');
+      const rendered = await mail.renderTemplate();
+
+      assert.ok(rendered.htmlRaw.includes('Hello there'));
+      assert.ok(rendered.htmlRaw.includes('See you soon'));
+      assert.ok(rendered.htmlRaw.includes('email.untranslated'));
+      assert.equal(rendered.subject, 'Default subject');
+    });
+
+    it('throws a clear error when the default export is not a function', async () => {
+      const dir = await writeTemplateDir('bad-default-export', {
+        'html.js': `export const render = () => '<h1>nope</h1>';\n`,
+        'subject.js': `export default () => 'subject';\n`,
+      });
+
+      const mail = new Mail(moduleApp, 'bad-default-export');
+      await assert.rejects(
+        async () => {
+          await mail.renderTemplate();
+        },
+        (err: Error) => {
+          assert.ok(err.message.includes(path.join(dir, 'html.js')));
+          assert.ok(
+            err.message.includes(
+              'default export must be a function (data) => string | Promise<string>',
+            ),
+          );
+          return true;
+        },
+      );
+    });
+
+    it('lets an app-registered js engine override the built-in one', async () => {
+      await writeTemplateDir('override-js', {
+        'html.js': `export default () => '<h1>built-in</h1>';\n`,
+        'subject.js': `export default () => 'built-in subject';\n`,
+      });
+
+      Mail.registerTemplateEngine(
+        'js',
+        (fullPath) => `<h1>custom engine: ${path.basename(fullPath)}</h1>`,
+      );
+
+      const mail = new Mail(moduleApp, 'override-js');
+      const rendered = await mail.renderTemplate();
+
+      assert.ok(rendered.htmlRaw.includes('custom engine: html.js'));
+      assert.equal(rendered.subject, '<h1>custom engine: subject.js</h1>');
+    });
+
+    it('lets a built-in engine be unregistered', async () => {
+      assert.equal(Mail.unregisterTemplateEngine('js'), true);
+      assert.equal(Mail.hasTemplateEngine('js'), false);
+
+      const mail = new Mail(moduleApp, 'override-js');
+      await assert.rejects(
+        async () => {
+          await mail.renderTemplate();
+        },
+        (err: Error) => {
+          assert.ok(err.message.includes('Template type js is not supported'));
+          return true;
+        },
       );
     });
   });

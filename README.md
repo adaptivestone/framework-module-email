@@ -22,7 +22,42 @@ import Mail from '@adaptivestone/framework-module-email';
 
 ## Template engines
 
-A template is a folder of files whose extension selects the engine used to render it. Out of the box the module ships only plain-text engines — `html`, `text` and `css` (files are read as-is) — and has **no template-engine dependency of its own**.
+A template is a folder of files whose extension selects the engine used to render it. Out of the box the module ships two kinds of built-in engine and has **no template-engine dependency of its own**:
+
+| Extensions | Engine |
+| --- | --- |
+| `html`, `text`, `css` | plain files, read as-is |
+| `js`, `ts`, `mjs`, `cjs` | module templates — the file is imported and its **default export is called with the render data** |
+
+### Module templates
+
+A module template is an ordinary module whose default export turns the render data into a string:
+
+```ts
+// emails/welcome/html.ts
+type WelcomeData = {
+  t: (key: string, options?: { defaultValue?: string }) => string;
+  name: string;
+};
+
+export default ({ t, name }: WelcomeData) => `
+  <h1>${t('email.welcome.title', { defaultValue: 'Welcome!' })}</h1>
+  <p>Hello ${name}</p>
+`;
+```
+
+Declare the data shape your template expects, as above — the engine itself calls the default export untyped (`TTemplateModule` from `@adaptivestone/framework-module-email/dist/types.d.ts` describes that raw contract, whose `data` is `Record<string, unknown>`, so calling `data.t(...)` on it directly does not type-check).
+
+`html`, `subject` and `text` can be modules; keep `style` as a plain `.css` file — it is rendered without any data.
+
+- The default export may be sync or async: `(data) => string | Promise<string>`.
+- It receives the same data every engine gets — `locale`, `t`, the mail config's `globalVariablesToTemplates`, and whatever you passed as `templateData`.
+- `t` comes from the i18n object handed to `new Mail(...)`. Without one a fallback translator is used that honours the i18next default overloads: `t('email.hi', { defaultValue: 'Hi' })` and `t('email.hi', 'Hi')` both return `Hi`, while a key with no default renders as the key itself.
+- A file whose default export is missing or is not a function fails with a clear error naming that file.
+- `js`, `ts`, `mjs` and `cjs` share one engine — ship whichever extension your app produces (`.ts` when you run TypeScript natively, `.js` after a build step).
+- Templates are imported once per process and cached by `import()`. That is what you want for template files shipped with an app, but a template edited on disk needs a restart to be picked up.
+
+### Bring your own engine
 
 To render templates written in a real templating language, install that engine in your app and register it. The callback receives the absolute path to the template file and the render data, and returns the rendered string (sync or async):
 
@@ -68,7 +103,7 @@ await server.startServer();
 `registerTemplateEngine` can be called as many times as you like:
 
 - **Different extensions accumulate** — call it once per engine you want (`pug`, `ejs`, `mjml`, …).
-- **The same extension overrides** — the last registration for a given extension wins, so you can replace a built-in (e.g. swap the default `html` reader) or re-register safely. There is no error on re-registration.
+- **The same extension overrides** — the last registration for a given extension wins. The built-ins are ordinary entries with no special casing, so you can replace one (swap the `html` reader, or give `js` your own invocation contract such as named exports or a precompiled cache) or re-register safely. There is no error on re-registration, and `unregisterTemplateEngine` removes a built-in just as well.
 - Extensions are normalized, so `'pug'`, `'.pug'` and `'.PUG'` all target the same engine.
 
 ### Helpers

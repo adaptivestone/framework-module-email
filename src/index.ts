@@ -9,7 +9,13 @@ import nodemailer from 'nodemailer';
 import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
 import stub from 'nodemailer-stub-transport';
 import defaultMailConfig from './config/mail.ts';
-import type { TMinimalApp, TMinimalI18n, TTemplateEngine } from './types.d.ts';
+import type {
+  TMinimalApp,
+  TMinimalI18n,
+  TMinimalI18nOptions,
+  TTemplateEngine,
+  TTemplateModule,
+} from './types.d.ts';
 
 const mailTransports = {
   stub,
@@ -23,16 +29,67 @@ const passthroughEngine: TTemplateEngine = (fullPath) =>
   fs.promises.readFile(fullPath, { encoding: 'utf8' });
 
 /**
+ * Engine that renders a template written as a module (js / ts / mjs / cjs):
+ * it imports the file and calls its default export with the render data.
+ *
+ * Note: `import()` caches a module per resolved URL for the lifetime of the
+ * process, so a template is evaluated once and reused afterwards. That is what
+ * we want for static template files shipped with an app; a template edited on
+ * disk needs a restart to be picked up.
+ */
+const moduleEngine: TTemplateEngine = async (fullPath, templateData) => {
+  const templateModule = (await import(url.pathToFileURL(fullPath).href)) as {
+    default?: TTemplateModule;
+  };
+  const render = templateModule?.default;
+  if (typeof render !== 'function') {
+    throw new Error(
+      `Template module '${fullPath}' cannot be rendered: default export must be a function (data) => string | Promise<string>`,
+    );
+  }
+  return render(templateData);
+};
+
+/**
  * Registry mapping a file extension (without the dot, lower-cased) to the engine
- * that renders it. By design this module ships ONLY plain-text engines and has
- * no template-engine dependency of its own. Register engines such as
- * pug / ejs / handlebars yourself via `Mail.registerTemplateEngine`.
+ * that renders it. Out of the box it holds plain-file engines (html, text, css)
+ * and module engines (js, ts, mjs, cjs); this module has no template-engine
+ * dependency of its own. Register engines such as pug / ejs / handlebars
+ * yourself via `Mail.registerTemplateEngine`.
+ *
+ * These are ordinary entries with no special casing: registering your own
+ * engine for `js` overrides the built-in one (last registration wins) and
+ * `unregisterTemplateEngine('js')` removes it.
  */
 const templateEngines = new Map<string, TTemplateEngine>([
   ['html', passthroughEngine],
   ['text', passthroughEngine],
   ['css', passthroughEngine],
+  // Same mechanics for every module extension — which one an app ships depends
+  // only on how (and whether) it compiles its templates.
+  ['js', moduleEngine],
+  ['ts', moduleEngine],
+  ['mjs', moduleEngine],
+  ['cjs', moduleEngine],
 ]);
+
+/**
+ * Translator used when no i18n object was passed to `new Mail(...)`.
+ * Honours both i18next default overloads — `t(key, 'Default')` and
+ * `t(key, { defaultValue: 'Default' })` — and returns the key otherwise.
+ */
+const fallbackTranslate = (
+  key: string,
+  options?: string | TMinimalI18nOptions,
+): string => {
+  if (typeof options === 'string') {
+    return options;
+  }
+  if (typeof options?.defaultValue === 'string') {
+    return options.defaultValue;
+  }
+  return key;
+};
 
 const normalizeExtension = (extension: string) =>
   extension.toLowerCase().replace(/^\./, '');
@@ -70,7 +127,7 @@ class Mail {
    * i18n object. Fallback if you have no real i18n object
    */
   i18n: TMinimalI18n = {
-    t: (str: string) => str,
+    t: fallbackTranslate,
     language: 'en', // todo change it to config
   };
 
