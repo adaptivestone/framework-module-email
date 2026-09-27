@@ -467,6 +467,43 @@ describe('Mail module', () => {
         message.includes(Buffer.from('Hello World').toString('base64')),
       );
     });
+
+    it('adds configured inline attachments only when their CID is used', async () => {
+      const imagePath = path.join(tempDir, 'brand.png');
+      await writeFile(imagePath, Buffer.from('test-image'));
+      const app: TMinimalApp = {
+        ...mockApp,
+        getConfig: () => ({
+          from: 'test@test.com',
+          transport: 'stub',
+          inlineAttachments: [
+            { filename: 'brand.png', path: imagePath, cid: 'brand@test' },
+          ],
+        }),
+      };
+
+      const withImage = await Mail.sendRaw(
+        app,
+        'recipient@test.com',
+        'With image',
+        '<img src="cid:brand@test">',
+        '',
+        '',
+        { attachments: [{ filename: 'other.txt', content: 'other' }] },
+      );
+      const imageMessage = withImage.response.toString();
+      assert.match(imageMessage, /Content-ID: <brand@test>/);
+      assert.ok(imageMessage.includes('filename=brand.png'));
+      assert.ok(imageMessage.includes('filename=other.txt'));
+
+      const withoutImage = await Mail.sendRaw(
+        app,
+        'recipient@test.com',
+        'Without image',
+        '<p>No image</p>',
+      );
+      assert.ok(!withoutImage.response.toString().includes('brand.png'));
+    });
   });
 
   // Kept last on purpose: the two final tests override and then remove the

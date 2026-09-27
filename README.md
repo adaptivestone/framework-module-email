@@ -112,6 +112,30 @@ await server.startServer();
 - `Mail.unregisterTemplateEngine(extension)` — remove an engine; returns `true` if one was removed.
 - `Mail.hasTemplateEngine(extension)` — check whether an engine is registered.
 
+### Inline images
+
+Configure CID attachments once in your application's `mail` config. The module
+adds an attachment only when the rendered HTML references its CID, and preserves
+attachments passed to `send()` or `sendRaw()` for that message.
+
+```ts
+import path from 'node:path';
+
+export default {
+  inlineAttachments: [
+    {
+      filename: 'brand.png',
+      path: path.resolve('src/services/messaging/email/resources/brand.png'),
+      cid: 'brand@example.com',
+    },
+  ],
+};
+```
+
+Reference the same ID in a template: `<img src="cid:brand@example.com" alt="Brand">`.
+Nodemailer embeds the image in the message, so it does not require a remote
+image request.
+
 ## API
 
 Please check detailed documentation [here](https://framework.adaptivestone.com/docs/email)

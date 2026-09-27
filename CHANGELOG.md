@@ -1,3 +1,11 @@
+# 2.1.1
+
+**Features**
+
+- Configurable `inlineAttachments` for CID images. A configured attachment is
+  included only when the rendered HTML references its CID, and per-message
+  attachments remain intact.
+
 # 2.1.0
 
 **Features**

@@ -5,6 +5,7 @@ import { promisify } from 'node:util';
 import merge from 'deepmerge';
 import { convert } from 'html-to-text';
 import juice from 'juice';
+import type { SendMailOptions } from 'nodemailer';
 import nodemailer from 'nodemailer';
 import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
 import stub from 'nodemailer-stub-transport';
@@ -277,7 +278,7 @@ class Mail {
   async send(
     to: string | Array<string>,
     from: string = '',
-    aditionalNodemailerOptions = {},
+    aditionalNodemailerOptions: SendMailOptions = {},
   ) {
     const { subject, text, inlinedHTML } = await this.renderTemplate();
 
@@ -309,7 +310,7 @@ class Mail {
     html: string,
     text: string = '',
     from: string = '',
-    additionalNodeMailerOption = {},
+    additionalNodeMailerOption: SendMailOptions = {},
   ) {
     if (!app || !to || !subject || !html) {
       throw new Error('App, to, subject and html is required fields.');
@@ -335,6 +336,13 @@ class Mail {
       transportFn(transportConfig),
     );
 
+    const attachments = [
+      ...(additionalNodeMailerOption.attachments ?? []),
+      ...(mailConfig.inlineAttachments ?? []).filter(({ cid }) =>
+        html.includes(`cid:${cid}`),
+      ),
+    ];
+
     return transporter.sendMail({
       from,
       to,
@@ -342,6 +350,7 @@ class Mail {
       text,
       html,
       ...additionalNodeMailerOption,
+      ...(attachments.length ? { attachments } : {}),
     });
   }
 

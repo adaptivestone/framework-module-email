@@ -1,3 +1,4 @@
+import type Mail from 'nodemailer/lib/mailer/index.d.ts';
 import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
 import type stubTransport from 'nodemailer-stub-transport';
 
@@ -107,6 +108,8 @@ export interface EmailConfig {
     links?: boolean;
     scripts?: boolean;
   };
+  /** CID attachments are added only when the rendered HTML references their CID. */
+  inlineAttachments?: Array<Mail.Attachment & { cid: string }>;
   globalVariablesToTemplates?: Record<string, unknown>;
 }
 
