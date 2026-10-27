@@ -96,7 +96,6 @@ const normalizeExtension = (extension: string) =>
 
 // Restrict juice's style->attribute mapping to <table> only (not td/th/tr/...).
 // Set once at module load; it mutates a shared juice singleton.
-// @ts-expect-error juice's types do not expose tableElements
 juice.tableElements = ['TABLE'];
 
 const juiceResourcesAsync = promisify(juice.juiceResources);
