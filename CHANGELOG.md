@@ -1,12 +1,20 @@
+# 2.1.1
+
+**Security**
+
+- nodemailer `^10.2.1` (2.1.0 shipped with `^9.0.1`). It fixes the open nodemailer advisories, among them address-parser recipient injection, TLS `servername` reuse across transports through the DNS cache, and several denial-of-service issues. They are fixed only in nodemailer 10.1.4 and later. nodemailer 10 requires Node.js 20 or newer; this module already requires 22.12 or newer. No API changes.
+
 # 2.1.0
 
 **Features**
 
 - Built-in template engines for module templates: `js`, `ts`, `mjs` and `cjs`. The file is imported and its default export is called with the render data, honouring `string | Promise<string>` returns:
+
   ```ts
   // emails/welcome/html.ts
   export default (data) => `<h1>Hello ${data.name}</h1>`;
   ```
+
   A missing or non-function default export fails with a clear error naming the file.
 - The built-ins are plain entries in the engine registry, so `Mail.registerTemplateEngine('js', ...)` overrides one and `Mail.unregisterTemplateEngine('js')` removes it, exactly as for a custom engine.
 - Exported the `TTemplateModule` type describing the module template contract.
@@ -22,6 +30,7 @@
 
 - Pug is no longer a dependency of this module and is not bundled. Out of the box only the plain `html`, `text` and `css` template engines are available.
 - To keep rendering `.pug` templates, install pug in your app and register it once at startup:
+
   ```ts
   import pug from 'pug';
   import Mail from '@adaptivestone/framework-module-email';
@@ -52,6 +61,7 @@
 - Update dependencies
 
 # 1.1.1
+
 Update dependencies
 
 # 1.1.0

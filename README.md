@@ -24,9 +24,9 @@ import Mail from '@adaptivestone/framework-module-email';
 
 A template is a folder of files whose extension selects the engine used to render it. Out of the box the module ships two kinds of built-in engine and has **no template-engine dependency of its own**:
 
-| Extensions | Engine |
-| --- | --- |
-| `html`, `text`, `css` | plain files, read as-is |
+| Extensions               | Engine                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------- |
+| `html`, `text`, `css`    | plain files, read as-is                                                                           |
 | `js`, `ts`, `mjs`, `cjs` | module templates — the file is imported and its **default export is called with the render data** |
 
 ### Module templates
@@ -72,7 +72,9 @@ Mail.registerTemplateEngine('pug', (fullPath, data) =>
 );
 
 // any engine works the same way
-Mail.registerTemplateEngine('ejs', (fullPath, data) => ejs.renderFile(fullPath, data));
+Mail.registerTemplateEngine('ejs', (fullPath, data) =>
+  ejs.renderFile(fullPath, data),
+);
 ```
 
 ### Where to register
