@@ -3,10 +3,12 @@
 **Features**
 
 - Built-in template engines for module templates: `js`, `ts`, `mjs` and `cjs`. The file is imported and its default export is called with the render data, honouring `string | Promise<string>` returns:
+
   ```ts
   // emails/welcome/html.ts
   export default (data) => `<h1>Hello ${data.name}</h1>`;
   ```
+
   A missing or non-function default export fails with a clear error naming the file.
 - The built-ins are plain entries in the engine registry, so `Mail.registerTemplateEngine('js', ...)` overrides one and `Mail.unregisterTemplateEngine('js')` removes it, exactly as for a custom engine.
 - Exported the `TTemplateModule` type describing the module template contract.
@@ -22,6 +24,7 @@
 
 - Pug is no longer a dependency of this module and is not bundled. Out of the box only the plain `html`, `text` and `css` template engines are available.
 - To keep rendering `.pug` templates, install pug in your app and register it once at startup:
+
   ```ts
   import pug from 'pug';
   import Mail from '@adaptivestone/framework-module-email';
@@ -52,6 +55,7 @@
 - Update dependencies
 
 # 1.1.1
+
 Update dependencies
 
 # 1.1.0

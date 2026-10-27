@@ -4,7 +4,7 @@ name: Check  Types
 
 on:
   push:
-    branches: ['*']
+    branches: ["*"]
 
 jobs:
   check-types:
@@ -17,8 +17,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 'latest'
-          cache: 'npm'
+          node-version: "latest"
+          cache: "npm"
       - name: npm clean install
         run: npm ci
       - run: node --run types:check
