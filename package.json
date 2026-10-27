@@ -33,17 +33,17 @@
   "author": "Andrei Lahunou",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.9",
+    "@biomejs/biome": "^2.6.3",
     "@types/html-to-text": "^9.0.4",
-    "@types/node": "^26.0.0",
-    "@types/nodemailer": "^8.0.0",
+    "@types/node": "^26.6.5",
+    "@types/nodemailer": "^8.0.2",
     "@types/nodemailer-stub-transport": "^1.1.8",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "deepmerge": "^4.3.1",
-    "html-to-text": "^10.0.0",
-    "juice": "^12.1.0",
+    "html-to-text": "^10.0.1",
+    "juice": "^12.2.1",
     "nodemailer": "^10.2.1",
     "nodemailer-stub-transport": "^1.1.0"
   }

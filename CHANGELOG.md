@@ -4,6 +4,10 @@
 
 - nodemailer `^10.2.1` (2.1.0 shipped with `^9.0.1`). It fixes the open nodemailer advisories, among them address-parser recipient injection, TLS `servername` reuse across transports through the DNS cache, and several denial-of-service issues. They are fixed only in nodemailer 10.1.4 and later. nodemailer 10 requires Node.js 20 or newer; this module already requires 22.12 or newer. No API changes.
 
+**Dependencies**
+
+- Minimum versions raised to the current releases: `html-to-text` `^10.0.1`, `juice` `^12.2.1`. The development tools move to their current versions too.
+
 # 2.1.0
 
 **Features**
