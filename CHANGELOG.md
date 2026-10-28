@@ -1,3 +1,15 @@
+# 2.1.2
+
+**Fixes**
+
+- `send()` and `sendRaw()` resolve with `TSentMessageInfo` instead of `any`: nodemailer's `SMTPSentMessageInfo` for the `smtp` transport, `TStubSentMessageInfo` (`envelope`, `messageId`, `response` as a `Buffer`) for `stub`. Both types are exported from `types.d.ts`.
+- The published types now use the types nodemailer 10 ships. They were read from `@types/nodemailer` v8, a devDependency, so in a project without it the SMTP settings in `EmailConfig` were `any`.
+- `EmailConfig.transports.stub` is typed as `TStubTransportOptions` (`error`, `keepBcc`).
+
+**Dependencies**
+
+- Removed the devDependencies `@types/nodemailer` (nodemailer 10 ships its own types) and `@types/nodemailer-stub-transport` (it pulled in `@types/nodemailer` v3). No runtime changes.
+
 # 2.1.1
 
 **Security**
