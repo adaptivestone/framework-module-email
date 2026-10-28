@@ -9,7 +9,8 @@
     "rootDir": "src",
     "outDir": "dist",
     "declaration": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts"]

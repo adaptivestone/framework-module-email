@@ -1,5 +1,8 @@
-import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
-import type stubTransport from 'nodemailer-stub-transport';
+import type { MimeNodeEnvelope } from 'nodemailer/lib/mime-node';
+import type {
+  SMTPSentMessageInfo,
+  SMTPTransportOptions,
+} from 'nodemailer/lib/smtp-transport';
 
 /**
  * Options object of a `t()` call. `defaultValue` is the only option the
@@ -94,10 +97,35 @@ type _AssertDefaultValueIsAccepted = TAssertAssignable<
   { defaultValue: string; count: number }
 >;
 
+/**
+ * Options of the `stub` transport (nodemailer-stub-transport).
+ */
+export type TStubTransportOptions = {
+  /** Makes every send fail with this error message */
+  error?: string;
+  /** Keeps the Bcc header in the generated message */
+  keepBcc?: boolean;
+};
+
+/**
+ * What the `stub` transport resolves with: the raw message is in `response`.
+ */
+export type TStubSentMessageInfo = {
+  envelope: MimeNodeEnvelope;
+  messageId: string;
+  response: Buffer;
+};
+
+/**
+ * What `send()` and `sendRaw()` resolve with, depending on the configured
+ * transport.
+ */
+export type TSentMessageInfo = SMTPSentMessageInfo | TStubSentMessageInfo;
+
 export interface EmailConfig {
   from?: string;
   transports?: {
-    stub?: Parameters<typeof stubTransport>[0];
+    stub?: TStubTransportOptions;
     smtp?: SMTPTransportOptions;
   };
   transport?: 'stub' | 'smtp';
