@@ -5,21 +5,27 @@ import { promisify } from 'node:util';
 import merge from 'deepmerge';
 import { convert } from 'html-to-text';
 import juice from 'juice';
-import nodemailer from 'nodemailer';
-import type { Options as SMTPTransportOptions } from 'nodemailer/lib/smtp-transport/index.d.ts';
+import nodemailer, { type Transport } from 'nodemailer';
+import type { SMTPTransportOptions } from 'nodemailer/lib/smtp-transport';
 import stub from 'nodemailer-stub-transport';
 import defaultMailConfig from './config/mail.ts';
 import type {
   TMinimalApp,
   TMinimalI18n,
   TMinimalI18nOptions,
+  TSentMessageInfo,
+  TStubSentMessageInfo,
+  TStubTransportOptions,
   TTemplateEngine,
   TTemplateModule,
 } from './types.d.ts';
 
-const mailTransports = {
+const mailTransports: {
+  stub: (options?: TStubTransportOptions) => Transport<TStubSentMessageInfo>;
+  smtp: (options: SMTPTransportOptions) => SMTPTransportOptions;
+} = {
   stub,
-  smtp: (data: SMTPTransportOptions) => data,
+  smtp: (data) => data,
 };
 
 /**
@@ -271,13 +277,13 @@ class Mail {
    * @param {string | Array<string>} to email send to
    * @param {string} [from = mailConfig.from]
    * @param {object} [aditionalNodemailerOptions = {}] additional option to nodemailer
-   * @return {Promise}
+   * @return {Promise<TSentMessageInfo>}
    */
   async send(
     to: string | Array<string>,
     from: string = '',
     aditionalNodemailerOptions = {},
-  ) {
+  ): Promise<TSentMessageInfo> {
     const { subject, text, inlinedHTML } = await this.renderTemplate();
 
     return Mail.sendRaw(
@@ -300,6 +306,7 @@ class Mail {
    * @param {string} [text] if not provided will be generated from html string
    * @param {string} [from = mailConfig.from] from. If not provided will be grabbed from config
    * @param {object} [additionalNodeMailerOption = {}] any otipns to pass to nodemailer  https://nodemailer.com/message/
+   * @return {Promise<TSentMessageInfo>}
    */
   static async sendRaw(
     app: TMinimalApp,
@@ -309,7 +316,7 @@ class Mail {
     text: string = '',
     from: string = '',
     additionalNodeMailerOption = {},
-  ) {
+  ): Promise<TSentMessageInfo> {
     if (!app || !to || !subject || !html) {
       throw new Error('App, to, subject and html is required fields.');
     }
